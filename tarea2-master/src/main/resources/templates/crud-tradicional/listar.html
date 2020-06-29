@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+    <head th:replace="/templates/crud-tradicional/plantilla.html::head">
+        <title th:text="${titulo}">Listar</title>
+
+    </head>
+    <body>
+
+    <div th:insert="/templates/crud-tradicional/plantilla.html::header"></div>
+    <br>
+    <div class="container">
+        <div class="jumbotron">
+            <h1 class="display-4" th:text="${titulo}">....</h1>
+            <br>
+
+        <a href="/tarea2/crear" class="btn btn-primary">Nuevo Producto</a>
+            <br>
+        <table class="table table-striped">
+
+            <br>
+            <thead>
+            <tr>
+                <th scope="col" style="width:25%">ID</th>
+                <th scope="col" style="width:25%">Nombre</th>
+                <th scope="col" style="width:25%">Precio</th>
+                <th scope="col" style="width:25%">Acciones</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="producto : ${lista}">
+                <th scope="row">
+                    <a th:text="${producto.id}" th:href="'visualizar/'+${producto.id}"/>
+                </th>
+                <td th:text="${producto.nombre}">Producto</td>
+                <td th:text="${producto.precio}">Precio</td>
+                <td>
+                    <a th:text="Editar" th:href="'editar/'+${producto.id}" th class="btn btn-secondary btn-sm"/> |
+                    <a th:text="Eliminar" th:href="'eliminar/'+${producto.id}" th class="btn btn-danger btn-sm"/>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+
+        <!-- incluyendo la parte de javascript del template.        -->
+        <div th:replace="/templates/crud-tradicional/plantilla.html::javascript">
+
+        </div>
+
+    </div>
+    </body>
+
+</html>
