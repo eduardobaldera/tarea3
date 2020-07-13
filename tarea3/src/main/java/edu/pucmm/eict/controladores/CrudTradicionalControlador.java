@@ -3,14 +3,16 @@ package edu.pucmm.eict.controladores;
 import edu.pucmm.eict.encapsulaciones.CarroCompra;
 import edu.pucmm.eict.encapsulaciones.Producto;
 import edu.pucmm.eict.encapsulaciones.Usuario;
+import edu.pucmm.eict.encapsulaciones.VentasProducto;
 import edu.pucmm.eict.servicios.FakeServices;
 import edu.pucmm.eict.util.BaseControlador;
 import io.javalin.Javalin;
+import io.javalin.plugin.rendering.JavalinRenderer;
+import io.javalin.plugin.rendering.template.JavalinFreemarker;
 
 import java.math.BigDecimal;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+
 import static io.javalin.apibuilder.ApiBuilder.*;
 
 /**
@@ -19,6 +21,11 @@ import static io.javalin.apibuilder.ApiBuilder.*;
 public class CrudTradicionalControlador extends BaseControlador {
 
     FakeServices fakeServices = FakeServices.getInstancia();
+    //Registro de sistemas de plantillas
+    private void registroPlantillas() {
+        JavalinRenderer.register(JavalinFreemarker.INSTANCE, ".ftl");
+    }
+    CarroCompra carrito;
 
     public CrudTradicionalControlador(Javalin app) {
         super(app);
@@ -30,11 +37,21 @@ public class CrudTradicionalControlador extends BaseControlador {
     @Override
     public void aplicarRutas() {
         app.routes(() -> {
+
+            //carrito en sesion
+            before(ctx -> {
+                carrito = ctx.sessionAttribute("carrito");
+                if(carrito == null) {
+                    List<Producto> productosIniciales = new ArrayList<Producto>();
+                    ctx.sessionAttribute("carrito", new CarroCompra(1, productosIniciales));
+                }
+            });
+
             path("/tarea2/", () -> {
 
 
                 get("/", ctx -> {
-                    ctx.redirect("/tarea2/listar");
+                    ctx.redirect("/tarea2/comprar");
                 });
 
                 // Render de Login de usuarios
@@ -51,7 +68,7 @@ public class CrudTradicionalControlador extends BaseControlador {
 
                 // Manejo de Login de usuarios
                 // http://localhost:7000/api/usuarios/login/
-                post("/usuarios/login/", ctx -> {
+                post("/login/", ctx -> {
                     String usr = ctx.formParam("usuario");
                     String passw = ctx.formParam("password");
                     Usuario tmp = fakeServices.loginUsuario(usr, passw);
@@ -61,10 +78,10 @@ public class CrudTradicionalControlador extends BaseControlador {
 
                 // Logout de usuarios
                 // http://localhost:7000/api/usuarios/logout/
-                get("/usuarios/logout/", ctx -> {
+                get("/logout/", ctx -> {
                     Usuario usr = ctx.sessionAttribute("usuario");
                     fakeServices.logoutUsuario();
-                    ctx.redirect("/api/usuarios/login/");
+                    ctx.redirect("login/");
                 });
 
 
@@ -75,31 +92,34 @@ public class CrudTradicionalControlador extends BaseControlador {
                     Map<String, Object> modelo = new HashMap<>();
                     modelo.put("titulo", "Administrar Productos");
                     modelo.put("lista", lista);
+                    modelo.put("usr", fakeServices.getUsr());
+                    modelo.put("admin", fakeServices.getAdm());
+                    modelo.put("usuario", ctx.sessionAttribute("usuario"));
                     //enviando al sistema de plantilla.
-                    ctx.render("/templates/crud-tradicional/listar.html", modelo);
+                    ctx.render("/templates/crud-tradicional/listar.ftl", modelo);
                 });
 
                 get("/comprar", ctx -> {
                     //tomando el parametro utl y validando el tipo.
                     List<Producto> lista = fakeServices.listarProducto();
-                    //
                     Map<String, Object> modelo = new HashMap<>();
                     modelo.put("titulo", "Listado de Productos");
                     modelo.put("lista", lista);
+                    modelo.put("usr", fakeServices.getUsr());
+                    modelo.put("admin", fakeServices.getAdm());
+                    modelo.put("usuario", ctx.sessionAttribute("usuario"));
                     //enviando al sistema de plantilla.
-                    ctx.render("/templates/crud-tradicional/comprar.html", modelo);
+                    ctx.render("/templates/crud-tradicional/comprar.ftl", modelo);
                 });
 
                 //Agregando un producto al carrito
 
                 post("/agregar/:id", ctx -> {
-                    CarroCompra carrito = ctx.sessionAttribute("carrito");
                     Producto preprod = fakeServices.getProductoPorId(ctx.pathParam("id", Integer.class).get());
                     int cantidad = Integer.parseInt(ctx.formParam("cantidad"));
-                    //agregar cantidad
-                    Producto producto = new Producto(preprod.getId(), preprod.getNombre(), preprod.getPrecio());
+                    Producto producto = new Producto(preprod.getId(), preprod.getNombre(), preprod.getPrecio(), cantidad);
                     carrito.getListaProductos().add(producto);
-                    ctx.redirect("/tarea2/listar/");
+                    ctx.redirect("/tarea2/comprar");
                 });
 
 
@@ -107,14 +127,24 @@ public class CrudTradicionalControlador extends BaseControlador {
                 // http://localhost:7000/api/carrito
                 get("/carrito/", ctx -> {
                     CarroCompra carrito = ctx.sessionAttribute("carrito");
-                    Map<String, Object> contexto = new HashMap<>();
-                    contexto.put("titulo", "Carrito de Compra");
-                    contexto.put("carrito", carrito);
-                    contexto.put("cantidad", carrito.getListaProductos().size());
-                    contexto.put("usr", fakeServices.getUsr());
-                    contexto.put("admin", fakeServices.getAdm());
-                    contexto.put("usuario", ctx.sessionAttribute("usuario"));
-                    ctx.render("/templates/crud-tradicional/carrito.html", contexto);
+                    List<Producto> lista = carrito.getListaProductos();
+                    Map<String, Object> modelo = new HashMap<>();
+                    modelo.put("titulo", "Carrito de Compra");
+                    modelo.put("carrito", carrito);
+                    modelo.put("lista", lista);
+                    modelo.put("cantidad", carrito.getListaProductos().size());
+                    modelo.put("usr", fakeServices.getUsr());
+                    modelo.put("admin", fakeServices.getAdm());
+                    modelo.put("usuario", ctx.sessionAttribute("usuario"));
+                    ctx.render("/templates/crud-tradicional/carrito.ftl", modelo);
+                });
+
+                get("/carrito/eliminar/:id", ctx -> {
+                    fakeServices.setCarrito(carrito);
+                    Producto tmp = fakeServices.getProductoEnCarrito(ctx.pathParam("id", Integer.class).get());
+                    fakeServices.getCarrito().borrarProducto(tmp);
+                    ctx.sessionAttribute("carrito", fakeServices.getCarrito());
+                    ctx.redirect("/tarea2/carrito");
                 });
 
                 get("/crear", ctx -> {
@@ -123,7 +153,7 @@ public class CrudTradicionalControlador extends BaseControlador {
                     modelo.put("titulo", "Registrar Producto");
                     modelo.put("accion", "/tarea2/crear");
                     //enviando al sistema de plantilla.
-                    ctx.render("/templates/crud-tradicional/crearEditarVisualizar.html", modelo);
+                    ctx.render("/templates/crud-tradicional/CrearEditar.ftl", modelo);
                 });
 
                 /**
@@ -138,7 +168,7 @@ public class CrudTradicionalControlador extends BaseControlador {
                     //
                     Producto tmp = new Producto(matricula, nombre, precio);
                     //realizar algún tipo de validación...
-                    fakeServices.crearProducto(tmp); //puedo validar, existe un error enviar a otro vista.
+                    fakeServices.crearProducto(tmp);
                     ctx.redirect("/tarea2/");
                 });
 
@@ -152,19 +182,17 @@ public class CrudTradicionalControlador extends BaseControlador {
                     modelo.put("accion", "/tarea2/");
 
                     //enviando al sistema de ,plantilla.
-                    ctx.render("/templates/crud-tradicional/crearEditarVisualizar.html", modelo);
+                    ctx.render("/templates/crud-tradicional/visualizar.ftl", modelo);
                 });
 
                 get("/editar/:id", ctx -> {
                     Producto producto = fakeServices.getProductoPorId(ctx.pathParam("id", Integer.class).get());
-                    //
                     Map<String, Object> modelo = new HashMap<>();
-                    modelo.put("titulo", "Formulario Editar Producto "+producto.getId());
+                    modelo.put("titulo", "Formulario Editar Producto ");
                     modelo.put("producto", producto);
                     modelo.put("accion", "/tarea2/editar");
-
                     //enviando al sistema de ,plantilla.
-                    ctx.render("/templates/crud-tradicional/crearEditarVisualizar.html", modelo);
+                    ctx.render("/templates/crud-tradicional/CrearEditar.ftl", modelo);
                 });
 
                 /**
@@ -190,7 +218,31 @@ public class CrudTradicionalControlador extends BaseControlador {
                     ctx.redirect("/tarea2/");
                 });
 
+                post("carrito/checkout/", ctx -> {
+                    fakeServices.setCarrito(carrito);
+                    long id = fakeServices.getListaVentas().get(fakeServices.getListaVentas().size() - 1).getId() + 1;
+                    String nombreCliente = ctx.formParam("nombre");
+                    VentasProducto venta = new VentasProducto(id, new Date(), nombreCliente, fakeServices.getCarrito().getListaProductos());
+                    fakeServices.procesarVenta(venta);
+                    fakeServices.limpiarCarrito();
+                    ctx.sessionAttribute("carrito", fakeServices.getCarrito());
+                    ctx.redirect("/tarea2/carrito/");
+                });
+
+                // Listado de ventas realizadas
+                // http://localhost:7000/api/ventas
+                get("/ventas", ctx -> {
+                    Map<String, Object> contexto = new HashMap<>();
+                    contexto.put("titulo", "Listado de Ventas Realizadas");
+                    contexto.put("ventas", fakeServices.getListaVentas());
+                    contexto.put("usr", fakeServices.getUsr());
+                    contexto.put("admin", fakeServices.getAdm());
+                    contexto.put("usuario", ctx.sessionAttribute("usuario"));
+                    ctx.render("/templates/crud-tradicional/listarventas.ftl", contexto);
+                });
+
             });
+
         });
     }
 }

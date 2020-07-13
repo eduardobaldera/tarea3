@@ -30,5 +30,6 @@ public class CarroCompra {
         this.listaProductos = listaProductos;
     }
 
+    public boolean borrarProducto(Producto producto){ return listaProductos.remove(producto); }
 
 }

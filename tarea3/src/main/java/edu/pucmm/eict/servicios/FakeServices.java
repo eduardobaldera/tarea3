@@ -1,5 +1,6 @@
 package edu.pucmm.eict.servicios;
 
+import edu.pucmm.eict.encapsulaciones.CarroCompra;
 import edu.pucmm.eict.encapsulaciones.Producto;
 import edu.pucmm.eict.encapsulaciones.Usuario;
 import edu.pucmm.eict.encapsulaciones.VentasProducto;
@@ -13,13 +14,13 @@ import java.util.*;
 public class FakeServices {
 
     private static FakeServices instancia;
-//    private List<Estudiante> listaEstudiante = new ArrayList<>();
+    //    private List<Estudiante> listaEstudiante = new ArrayList<>();
     private List<Producto> listaProducto = new ArrayList<>();
     private List<Usuario> listaUsuarios = new ArrayList<>();
     private List<VentasProducto> listaVentas = new ArrayList<VentasProducto>();
     private boolean usr = false;
     private boolean adm = false;
-
+    private CarroCompra carrito;
 
     /**
      * Constructor privado.
@@ -27,11 +28,16 @@ public class FakeServices {
     private FakeServices(){
         //añadiendo los estudiantes.
         //listaEstudiante.add(new Estudiante(20011136, "Carlos Camacho", "ITT"));
-        listaProducto.add(new Producto(0001, "Lapicero", new BigDecimal("0.03") ));
+        listaProducto.add(new Producto(0001, "Lapicero", new BigDecimal("0.03")));
+        listaProducto.add(new Producto(0002, "Mesa", new BigDecimal("0.90")));
         //anadiendo los usuarios.
         listaUsuarios.add(new Usuario("admin", "admin", "admin"));
         listaUsuarios.add(new Usuario("logueado", "logueado", "logueado"));
         listaUsuarios.add(new Usuario("usuario", "usuario", "usuario"));
+        List<Producto> listaTemporalVenta = new ArrayList<Producto>();
+        listaTemporalVenta.add(new Producto(1, "Motherboard", new BigDecimal("9500"), 2));
+        listaTemporalVenta.add(new Producto(2, "CPU AMD Ryzen 5 3500", new BigDecimal("14350"), 1));
+        listaVentas.add(new VentasProducto(1, new Date(), "Rafael Felipe", listaTemporalVenta));
 
     }
 
@@ -41,7 +47,7 @@ public class FakeServices {
         }
         return instancia;
     }
-//    public Usuario autheticarUsuario(String usuario, String password){
+    //    public Usuario autheticarUsuario(String usuario, String password){
 //        //simulando la busqueda en la base de datos.
 //        return new Usuario(usuario, "Usuario "+usuario, password);
 //    }
@@ -53,6 +59,30 @@ public class FakeServices {
 
     public Producto getProductoPorId (int id){
         return  listaProducto.stream().filter(e -> e.getId() == id).findFirst().orElse(null);
+    }
+
+    public boolean eliminarProducto(Producto producto){
+        return listaProducto.remove(producto);
+    }
+
+    // Carrito
+
+    public Producto getProductoEnCarrito(int id){
+        return carrito.getListaProductos().stream().filter(producto -> producto.getId() == id).findFirst().orElse(null);
+    }
+
+    public void procesarVenta(VentasProducto venta){
+        listaVentas.add(venta);
+    }
+
+    public List<VentasProducto> getListaVentas(){
+        return listaVentas;
+    }
+
+
+    public void limpiarCarrito(){
+        List<Producto> tmp = new ArrayList<Producto>();
+        carrito.setListaProductos(tmp);
     }
 
     public Producto crearProducto(Producto producto){
@@ -110,5 +140,9 @@ public class FakeServices {
     public boolean getAdm() { return adm; }
 
     public void setAdm(boolean admin) { adm = admin; }
+
+    public CarroCompra getCarrito() { return carrito; }
+
+    public void setCarrito(CarroCompra cart) { this.carrito = cart; }
 
 }

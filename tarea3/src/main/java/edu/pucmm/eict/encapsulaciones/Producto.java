@@ -8,11 +8,19 @@ public class Producto {
     int id;
     String nombre;
     BigDecimal precio;
+    int cantidad;
 
     public Producto(int id, String nombre, BigDecimal precio) {
         this.id = id;
         this.nombre = nombre;
         this.precio = precio;
+    }
+
+    public Producto(int id, String nombre, BigDecimal precio, int cantidad) {
+        this.id = id;
+        this.nombre = nombre;
+        this.precio = precio;
+        this.cantidad = cantidad;
     }
 
     public Producto() {
@@ -47,6 +55,10 @@ public class Producto {
         nombre = p.getNombre();
         precio = p.getPrecio();
     }
+
+    public void setCantidad(int cantidad) { this.cantidad = cantidad; }
+
+    public int getCantidad() { return cantidad; }
 
     @Override
     public boolean equals(Object o) {
