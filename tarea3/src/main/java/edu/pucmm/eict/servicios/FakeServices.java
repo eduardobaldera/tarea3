@@ -14,7 +14,6 @@ import java.util.*;
 public class FakeServices {
 
     private static FakeServices instancia;
-    //    private List<Estudiante> listaEstudiante = new ArrayList<>();
     private List<Producto> listaProducto = new ArrayList<>();
     private List<Usuario> listaUsuarios = new ArrayList<>();
     private List<VentasProducto> listaVentas = new ArrayList<VentasProducto>();
@@ -26,14 +25,14 @@ public class FakeServices {
      * Constructor privado.
      */
     private FakeServices(){
-        //añadiendo los estudiantes.
-        //listaEstudiante.add(new Estudiante(20011136, "Carlos Camacho", "ITT"));
+        //anadiendo productos
         listaProducto.add(new Producto(0001, "Lapicero", new BigDecimal("0.03")));
         listaProducto.add(new Producto(0002, "Mesa", new BigDecimal("0.90")));
         //anadiendo los usuarios.
         listaUsuarios.add(new Usuario("admin", "admin", "admin"));
         listaUsuarios.add(new Usuario("logueado", "logueado", "logueado"));
         listaUsuarios.add(new Usuario("usuario", "usuario", "usuario"));
+        //anadiendo ventas
         List<Producto> listaTemporalVenta = new ArrayList<Producto>();
         listaTemporalVenta.add(new Producto(1, "Motherboard", new BigDecimal("9500"), 2));
         listaTemporalVenta.add(new Producto(2, "CPU AMD Ryzen 5 3500", new BigDecimal("14350"), 1));
@@ -47,10 +46,6 @@ public class FakeServices {
         }
         return instancia;
     }
-    //    public Usuario autheticarUsuario(String usuario, String password){
-//        //simulando la busqueda en la base de datos.
-//        return new Usuario(usuario, "Usuario "+usuario, password);
-//    }
     public List<Usuario> getListaUsuarios(){
         return listaUsuarios;
     }
@@ -65,7 +60,6 @@ public class FakeServices {
         return listaProducto.remove(producto);
     }
 
-    // Carrito
 
     public Producto getProductoEnCarrito(int id){
         return carrito.getListaProductos().stream().filter(producto -> producto.getId() == id).findFirst().orElse(null);
@@ -78,7 +72,6 @@ public class FakeServices {
     public List<VentasProducto> getListaVentas(){
         return listaVentas;
     }
-
 
     public void limpiarCarrito(){
         List<Producto> tmp = new ArrayList<Producto>();

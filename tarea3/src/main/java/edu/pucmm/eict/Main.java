@@ -1,15 +1,28 @@
 package edu.pucmm.eict;
-
 import edu.pucmm.eict.controladores.*;
 import edu.pucmm.eict.encapsulaciones.CarroCompra;
 import edu.pucmm.eict.encapsulaciones.Producto;
+import edu.pucmm.eict.servicios.DBConection;
+import edu.pucmm.eict.servicios.DBManagement;
 import io.javalin.Javalin;
 import io.javalin.core.util.RouteOverviewPlugin;
 import java.util.ArrayList;
 import java.util.List;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
 
 public class Main {
-    public static void main(String[] args) {
+    public static void main(String[] args) throws SQLException {
+        DBManagement.getInstance().startDB();
+        DBConection.getInstance().testConn();
+
+        // Se crean las tablas establecidas
+        DBManagement.crearTablas();
+
+        // Se crean los usuarios por defecto
+        DBManagement.crearUsuarios();
+
         //Creando la instancia del servidor.
         Javalin app = Javalin.create(config ->{
             config.addStaticFiles("/publico"); //desde la carpeta de resources
