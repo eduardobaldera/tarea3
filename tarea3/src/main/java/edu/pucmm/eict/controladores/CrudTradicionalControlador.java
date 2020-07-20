@@ -9,6 +9,7 @@ import edu.pucmm.eict.util.BaseControlador;
 import io.javalin.Javalin;
 import io.javalin.plugin.rendering.JavalinRenderer;
 import io.javalin.plugin.rendering.template.JavalinFreemarker;
+import org.jasypt.util.password.StrongPasswordEncryptor;
 
 import java.math.BigDecimal;
 import java.util.*;
@@ -45,6 +46,17 @@ public class CrudTradicionalControlador extends BaseControlador {
                     List<Producto> productosIniciales = new ArrayList<Producto>();
                     ctx.sessionAttribute("carrito", new CarroCompra(1, productosIniciales));
                 }
+                if(ctx.cookie("recordarme") != null){
+                    for(Usuario tmp : fakeServices.getListaUsuarios()) {
+                        String key = "@cm1ptgrone" + tmp.getUsuario();
+                        StrongPasswordEncryptor pwEncryptor = new StrongPasswordEncryptor();
+                        String encryptedPassword = pwEncryptor.encryptPassword(key);
+                        if(pwEncryptor.checkPassword(encryptedPassword, ctx.cookie("recordarme"))){
+                            fakeServices.loginUsuario(tmp.getUsuario(), tmp.getPassword());
+                            ctx.sessionAttribute("usuario", tmp);
+                        }
+                    }
+                }
             });
 
             path("/tarea2/", () -> {
@@ -71,7 +83,14 @@ public class CrudTradicionalControlador extends BaseControlador {
                 post("/login/", ctx -> {
                     String usr = ctx.formParam("usuario");
                     String passw = ctx.formParam("password");
+                    String check = ctx.formParam("remember");
                     Usuario tmp = fakeServices.loginUsuario(usr, passw);
+                    if(check.equals("yes")){
+                        String key = "@cm1ptgrone" + tmp.getUsuario();
+                        StrongPasswordEncryptor pwEncryptor = new StrongPasswordEncryptor();
+                        String encryptedPassword = pwEncryptor.encryptPassword(key);
+                        ctx.cookie("recordarme", encryptedPassword, 604800);
+                    }
                     ctx.sessionAttribute("usuario", tmp);
                     ctx.redirect("/");
                 });
@@ -152,7 +171,9 @@ public class CrudTradicionalControlador extends BaseControlador {
                     Map<String, Object> modelo = new HashMap<>();
                     modelo.put("titulo", "Registrar Producto");
                     modelo.put("accion", "/tarea2/crear");
-                    //enviando al sistema de plantilla.
+                    modelo.put("usr", fakeServices.getUsr());
+                    modelo.put("admin", fakeServices.getAdm());
+                    modelo.put("usuario", ctx.sessionAttribute("usuario"));
                     ctx.render("/templates/crud-tradicional/CrearEditar.ftl", modelo);
                 });
 
@@ -191,6 +212,9 @@ public class CrudTradicionalControlador extends BaseControlador {
                     modelo.put("titulo", "Formulario Editar Producto ");
                     modelo.put("producto", producto);
                     modelo.put("accion", "/tarea2/editar");
+                    modelo.put("usr", fakeServices.getUsr());
+                    modelo.put("admin", fakeServices.getAdm());
+                    modelo.put("usuario", ctx.sessionAttribute("usuario"));
                     //enviando al sistema de ,plantilla.
                     ctx.render("/templates/crud-tradicional/CrearEditar.ftl", modelo);
                 });
@@ -214,7 +238,8 @@ public class CrudTradicionalControlador extends BaseControlador {
                  * Puede ser implementando por el metodo post, por simplicidad utilizo el get. ;-D
                  */
                 get("/eliminar/:matricula", ctx -> {
-                    fakeServices.eliminandoProducto(ctx.pathParam("matricula", Integer.class).get());
+                    Producto tmp = fakeServices.getProductoPorId(ctx.pathParam("matricula", Integer.class).get());
+                    fakeServices.eliminandoProducto(tmp);
                     ctx.redirect("/tarea2/");
                 });
 

@@ -7,7 +7,7 @@ import java.sql.SQLException;
 public class DBConection {
 
     private static edu.pucmm.eict.servicios.DBConection conn;
-    private String URL = "jdbc:h2:tcp://localhost/~/practica3";
+    private String URL = "jdbc:h2:tcp://localhost/~/tarea3";
 
     private DBConection() { registerDriver(); }
 

@@ -67,9 +67,9 @@ public class DBManagement {
             ps.setString(3, "admin");
             ps.executeUpdate();
 
-            ps1.setString(1, "rafael");
-            ps1.setString(2, "Rafael Felipe");
-            ps1.setString(3, "0712");
+            ps1.setString(1, "user ");
+            ps1.setString(2, "Usuario");
+            ps1.setString(3, "user");
             ps1.executeUpdate();
         } catch (SQLException e) {
             e.printStackTrace();

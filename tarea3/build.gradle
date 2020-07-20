@@ -24,4 +24,5 @@ dependencies {
     compile 'org.thymeleaf:thymeleaf:3.0.5.RELEASE'
     compile "org.apache.velocity:velocity-engine-core:2.2"
     compile 'com.h2database:h2:1.4.200'
+    compile 'org.jasypt:jasypt:1.9.3'
 }
